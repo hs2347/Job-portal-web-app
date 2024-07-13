@@ -1,7 +1,7 @@
 import { fetchProfileAction } from "@/actions";
 import HomepageButtonControls from "@/components/homepage-button-controls";
 import { Button } from "@/components/ui/button";
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Fragment } from "react";
 

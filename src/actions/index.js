@@ -190,6 +190,7 @@ export async function createStripePaymentAction(data) {
     payment_method_types: ["card"],
     line_items: data?.lineItems,
     mode: "subscription",
+    billing_address_collection: 'required',
     success_url: `${process.env.URL}/membership` + "?status=success",
     cancel_url: `${process.env.URL}/membership` + "?status=cancel",
   });

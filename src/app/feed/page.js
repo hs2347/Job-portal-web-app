@@ -1,6 +1,6 @@
 import { fetchAllFeedPostsAction, fetchProfileAction } from "@/actions";
 import Feed from "@/components/feed";
-import { currentUser } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 async function FeedPage() {
