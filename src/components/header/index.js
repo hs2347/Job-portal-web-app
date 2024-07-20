@@ -88,7 +88,7 @@ function Header({ user, profileInfo }) {
                 fill={theme === "dark" ? "light" : "dark"}
                 onClick={() => setTheme(theme === "light" ? "dark" : "light")}
               />
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
           </SheetContent>
         </Sheet>
@@ -112,7 +112,7 @@ function Header({ user, profileInfo }) {
             fill={theme === "dark" ? "light" : "dark"}
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           />
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </nav>
       </header>
     </div>
