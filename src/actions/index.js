@@ -184,46 +184,14 @@ export async function createPriceIdAction(data) {
 
 //create payment logic
 export async function createStripePaymentAction(data) {
-  // Log the data being sent to Stripe
-  console.log('Data being sent to Stripe:', {
+  const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: data?.lineItems,
     mode: "subscription",
     billing_address_collection: 'required',
-    success_url: `${process.env.URL}/membership?status=success`,
-    cancel_url: `${process.env.URL}/membership?status=cancel`,
+    success_url: `${process.env.URL}/membership` + "?status=success",
+    cancel_url: `${process.env.URL}/membership` + "?status=cancel",
   });
-
-  try {
-    // Create the Stripe Checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: data?.lineItems,
-      mode: "subscription",
-      billing_address_collection: 'required',
-      success_url: `${process.env.URL}/membership?status=success`,
-      cancel_url: `${process.env.URL}/membership?status=cancel`,
-    });
-
-    return {
-      success: true,
-      id: session?.id,
-    };
-  } catch (error) {
-    // Log the error with additional details
-    console.error('Stripe Checkout Session Error:', error);
-    console.error('Error Type:', error.type);
-    console.error('Error Code:', error.code);
-    console.error('Error Param:', error.param);
-    console.error('Error Raw:', error.raw);
-
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-}
-
 
   return {
     success: true,
