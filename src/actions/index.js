@@ -7,9 +7,7 @@ import Job from "@/models/job";
 import Profile from "@/models/profile";
 import { revalidatePath } from "next/cache";
 
-const stripe = require("stripe")(
-  "sk_test_51OmysvSDIIDnkuXbexWUu4Fx8HNeEaIpT7sdAZdHdO5qy4oV8n015le4dsSKnhzs3A2RMlgKRqwYiIzmc7tzNnPO003mv1fuZO"
-);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 //create profile action
 export async function createProfileAction(formData, pathToRevalidate) {
