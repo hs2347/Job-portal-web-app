@@ -9,144 +9,44 @@ import { revalidatePath } from "next/cache";
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-//create profile action
+// --- Profile Actions ---
+
 export async function createProfileAction(formData, pathToRevalidate) {
-  await connectToDB();
-  await Profile.create(formData);
-  revalidatePath(pathToRevalidate);
+  try {
+    await connectToDB();
+    await Profile.create(formData);
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Profile created successfully." };
+  } catch (error) {
+    console.error("Error creating profile:", error);
+    return {
+      success: false,
+      message: "Failed to create profile. Please try again.",
+    };
+  }
 }
 
 export async function fetchProfileAction(id) {
-  await connectToDB();
-  const result = await Profile.findOne({ userId: id });
+  try {
+    await connectToDB();
+    const result = await Profile.findOne({ userId: id });
 
-  return JSON.parse(JSON.stringify(result));
+    // It's not an error if no profile is found, just return null
+    if (!result) {
+      return { success: true, data: null };
+    }
+
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return { success: false, message: "Failed to fetch profile." };
+  }
 }
 
-//create job action
-
-export async function postNewJobAction(formData, pathToRevalidate) {
-  await connectToDB();
-  await Job.create(formData);
-  revalidatePath(pathToRevalidate);
-}
-
-//fetch job action
-//recruiter
-export async function fetchJobsForRecruiterAction(id) {
-  await connectToDB();
-  const result = await Job.find({ recruiterId: id });
-
-  return JSON.parse(JSON.stringify(result));
-}
-//candidate
-export async function fetchJobsForCandidateAction(filterParams = {}) {
-  await connectToDB();
-  let updatedParams = {};
-  Object.keys(filterParams).forEach((filterKey) => {
-    updatedParams[filterKey] = { $in: filterParams[filterKey].split(",") };
-  });
-  console.log(updatedParams, "updatedParams");
-  const result = await Job.find(
-    filterParams && Object.keys(filterParams).length > 0 ? updatedParams : {}
-  );
-
-  return JSON.parse(JSON.stringify(result));
-}
-
-//create job application
-
-export async function createJobApplicationAction(data, pathToRevalidate) {
-  await connectToDB();
-  await Application.create(data);
-  revalidatePath(pathToRevalidate);
-}
-
-//fetch job applications - candidate
-export async function fetchJobApplicationsForCandidate(candidateID) {
-  await connectToDB();
-  const result = await Application.find({ candidateUserID: candidateID });
-
-  return JSON.parse(JSON.stringify(result));
-}
-
-//fetch job applications - recruiter
-
-export async function fetchJobApplicationsForRecruiter(recruiterID) {
-  await connectToDB();
-  const result = await Application.find({ recruiterUserID: recruiterID });
-
-  return JSON.parse(JSON.stringify(result));
-}
-
-//update job application
-export async function updateJobApplicationAction(data, pathToRevalidate) {
-  await connectToDB();
-  const {
-    recruiterUserID,
-    name,
-    email,
-    candidateUserID,
-    status,
-    jobID,
-    _id,
-    jobAppliedDate,
-  } = data;
-  await Application.findOneAndUpdate(
-    {
-      _id: _id,
-    },
-    {
-      recruiterUserID,
-      name,
-      email,
-      candidateUserID,
-      status,
-      jobID,
-      jobAppliedDate,
-    },
-    { new: true }
-  );
-  revalidatePath(pathToRevalidate);
-}
-
-//get candidate detAils by candidate ID
-export async function getCandidateDetailsByIDAction(currentCandidateID) {
-  await connectToDB();
-  const result = await Profile.findOne({ userId: currentCandidateID });
-
-  return JSON.parse(JSON.stringify(result));
-}
-
-//create filter categories
-export async function createFilterCategoryAction() {
-  await connectToDB();
-  const result = await Job.find({});
-
-  return JSON.parse(JSON.stringify(result));
-}
-
-//update profile action
 export async function updateProfileAction(data, pathToRevalidate) {
-  await connectToDB();
-  const {
-    userId,
-    role,
-    email,
-    isPremiumUser,
-    memberShipType,
-    memberShipStartDate,
-    memberShipEndDate,
-    recruiterInfo,
-    candidateInfo,
-    _id,
-  } = data;
-
-  await Profile.findOneAndUpdate(
-    {
-      _id: _id,
-    },
-    {
+  try {
+    await connectToDB();
+    const {
       userId,
       role,
       email,
@@ -156,81 +56,254 @@ export async function updateProfileAction(data, pathToRevalidate) {
       memberShipEndDate,
       recruiterInfo,
       candidateInfo,
-    },
-    { new: true }
-  );
+      _id,
+    } = data;
 
-  revalidatePath(pathToRevalidate);
+    await Profile.findOneAndUpdate(
+      { _id: _id },
+      {
+        userId,
+        role,
+        email,
+        isPremiumUser,
+        memberShipType,
+        memberShipStartDate,
+        memberShipEndDate,
+        recruiterInfo,
+        candidateInfo,
+      },
+      { new: true }
+    );
+
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Profile updated successfully." };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return {
+      success: false,
+      message: "Failed to update profile. Please try again.",
+    };
+  }
 }
 
-//create stripe price id based on tier selection
+// --- Job Actions ---
+
+export async function postNewJobAction(formData, pathToRevalidate) {
+  try {
+    await connectToDB();
+    await Job.create(formData);
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Job posted successfully." };
+  } catch (error) {
+    console.error("Error posting new job:", error);
+    return { success: false, message: "Failed to post job. Please try again." };
+  }
+}
+
+export async function fetchJobsForRecruiterAction(id) {
+  try {
+    await connectToDB();
+    const result = await Job.find({ recruiterId: id });
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching recruiter jobs:", error);
+    return { success: false, message: "Failed to fetch jobs." };
+  }
+}
+
+export async function fetchJobsForCandidateAction(filterParams = {}) {
+  try {
+    await connectToDB();
+    let updatedParams = {};
+
+    // Build the query parameters
+    Object.keys(filterParams).forEach((filterKey) => {
+      if (filterParams[filterKey]) { // Ensure the filter value is not empty
+        updatedParams[filterKey] = { $in: filterParams[filterKey].split(",") };
+      }
+    });
+
+    console.log(updatedParams, "updatedParams");
+
+    const query = Object.keys(updatedParams).length > 0 ? updatedParams : {};
+    const result = await Job.find(query);
+
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching candidate jobs:", error);
+    return { success: false, message: "Failed to fetch jobs." };
+  }
+}
+
+// --- Application Actions ---
+
+export async function createJobApplicationAction(data, pathToRevalidate) {
+  try {
+    await connectToDB();
+    await Application.create(data);
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Application submitted successfully." };
+  } catch (error) {
+    console.error("Error creating job application:", error);
+    return {
+      success: false,
+      message: "Failed to submit application. Please try again.",
+    };
+  }
+}
+
+export async function fetchJobApplicationsForCandidate(candidateID) {
+  try {
+    await connectToDB();
+    const result = await Application.find({ candidateUserID: candidateID });
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching candidate applications:", error);
+    return { success: false, message: "Failed to fetch applications." };
+  }
+}
+
+export async function fetchJobApplicationsForRecruiter(recruiterID) {
+  try {
+    await connectToDB();
+    const result = await Application.find({ recruiterUserID: recruiterID });
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching recruiter applications:", error);
+    return { success: false, message: "Failed to fetch applications." };
+  }
+}
+
+export async function updateJobApplicationAction(data, pathToRevalidate) {
+  try {
+    await connectToDB();
+    const { _id, ...rest } = data; // Get ID and rest of the data
+    await Application.findOneAndUpdate(
+      { _id: _id },
+      rest,
+      { new: true }
+    );
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Application status updated." };
+  } catch (error) {
+    console.error("Error updating job application:", error);
+    return {
+      success: false,
+      message: "Failed to update application. Please try again.",
+    };
+  }
+}
+
+// --- Other Actions ---
+
+export async function getCandidateDetailsByIDAction(currentCandidateID) {
+  try {
+    await connectToDB();
+    const result = await Profile.findOne({ userId: currentCandidateID });
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error getting candidate details:", error);
+    return { success: false, message: "Failed to fetch candidate details." };
+  }
+}
+
+export async function createFilterCategoryAction() {
+  try {
+    await connectToDB();
+    // This function seems to just fetch all jobs, maybe for filters?
+    const result = await Job.find({});
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error creating filter categories:", error);
+    return { success: false, message: "Failed to fetch filter data." };
+  }
+}
+
+// --- Stripe (Payment) Actions ---
+
 export async function createPriceIdAction(data) {
-  const session = await stripe.prices.create({
-    currency: "inr",
-    unit_amount: data?.amount * 100,
-    recurring: {
-      interval: "year",
-    },
-    product_data: {
-      name: "Premium Plan",
-    },
-  });
+  try {
+    const session = await stripe.prices.create({
+      currency: "inr",
+      unit_amount: data?.amount * 100,
+      recurring: {
+        interval: "year",
+      },
+      product_data: {
+        name: "Premium Plan",
+      },
+    });
 
-  return {
-    success: true,
-    id: session?.id,
-  };
+    return { success: true, id: session?.id };
+  } catch (error) { // <-- TYPO WAS HERE
+    console.error("Error creating Stripe Price ID:", error);
+    return {
+      success: false,
+      message: "Failed to create payment plan. Please try again.",
+    };
+  }
 }
 
-//create payment logic
 export async function createStripePaymentAction(data) {
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: data?.lineItems,
-    mode: "subscription",
-    billing_address_collection: 'required',
-    success_url: `${process.env.URL}/membership` + "?status=success",
-    cancel_url: `${process.env.URL}/membership` + "?status=cancel",
-  });
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: data?.lineItems,
+      mode: "subscription",
+      billing_address_collection: "required",
+      success_url: `${process.env.URL}/membership?status=success`,
+      cancel_url: `${process.env.URL}/membership?status=cancel`,
+    });
 
-  return {
-    success: true,
-    id: session?.id,
-  };
+    return { success: true, id: session?.id };
+  } catch (error) {
+    console.error("Error creating Stripe checkout session:", error);
+    return {
+      success: false,
+      message: "Failed to create payment session. Please try again.",
+    };
+  }
 }
 
-//create post action
+// --- Feed (Posts) Actions ---
+
 export async function createFeedPostAction(data, pathToRevalidate) {
-  await connectToDB();
-  await Feed.create(data);
-  revalidatePath(pathToRevalidate);
+  try {
+    await connectToDB();
+    await Feed.create(data);
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Post created successfully." };
+  } catch (error) {
+    console.error("Error creating feed post:", error);
+    return { success: false, message: "Failed to create post." };
+  }
 }
 
-//fetch all posts action
 export async function fetchAllFeedPostsAction() {
-  await connectToDB();
-  const result = await Feed.find({});
-
-  return JSON.parse(JSON.stringify(result));
+  try {
+    await connectToDB();
+    const result = await Feed.find({});
+    return { success: true, data: JSON.parse(JSON.stringify(result)) };
+  } catch (error) {
+    console.error("Error fetching feed posts:", error);
+    return { success: false, message: "Failed to fetch posts." };
+  }
 }
 
-//update post action
 export async function updateFeedPostAction(data, pathToRevalidate) {
-  await connectToDB();
-  const { userId, userName, message, image, likes, _id } = data;
-  await Feed.findOneAndUpdate(
-    {
-      _id: _id,
-    },
-    {
-      userId,
-      userName,
-      image,
-      message,
-      likes,
-    },
-    { new: true }
-  );
+  try {
+    await connectToDB();
+    const { userId, userName, message, image, likes, _id } = data;
+    await Feed.findOneAndUpdate(
+      { _id: _id },
+      { userId, userName, image, message, likes },
+      { new: true }
+    );
 
-  revalidatePath(pathToRevalidate);
+    revalidatePath(pathToRevalidate);
+    return { success: true, message: "Post updated." };
+  } catch (error) {
+    console.error("Error updating feed post:", error);
+    return { success: false, message: "Failed to update post." };
+  }
 }
